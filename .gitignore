@@ -12,3 +12,17 @@ gradle-app.setting
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
+
+# ignore jedit backup files
+*~
+
+# ignore eclipse specific files
+/bin/
+/.settings/
+/.project
+/.classpath
+
+# ignore IDEA specific files
+/out/
+/.idea/
+*.iml
