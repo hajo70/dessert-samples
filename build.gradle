@@ -2,11 +2,14 @@ apply plugin: 'java'
 
 repositories {
     jcenter()
+    mavenLocal()
     maven { url 'https://jitpack.io' }
 }
 
+sourceCompatibility = 1.8
+
 dependencies {
-    testCompile 'com.github.hajo70:dessert:0.2'
+    testCompile 'com.github.hajo70:dessert:0.3-SNAPSHOT'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.easytesting:fest-assert:1.4'
