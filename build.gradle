@@ -6,7 +6,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.9
 
 dependencies {
     testCompile 'com.github.hajo70:dessert:0.3-SNAPSHOT'

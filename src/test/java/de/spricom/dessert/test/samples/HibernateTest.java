@@ -26,7 +26,7 @@ public class HibernateTest {
 
     @Test
     public void testCycleFree() throws IOException {
-        SliceSet packages = sc.packagesOf(resolver.getRootFiles());
+        ManifestSliceSet packages = sc.packagesOf(resolver.getRootFiles());
         try {
             SliceAssertions.assertThat(packages).isCycleFree();
             Fail.fail("No cycle found");
@@ -37,7 +37,7 @@ public class HibernateTest {
 
     @Test
     public void testClasses() {
-        SliceSet packages = sc.subPackagesOf("org.hibernate");
+        ManifestSliceSet packages = sc.subPackagesOfManifested("org.hibernate");
         Set<SliceEntry> classes = new HashSet<>();
         for (Slice slice : packages) {
             classes.addAll(slice.getEntries());

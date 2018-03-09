@@ -7,16 +7,12 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.spricom.dessert.slicing.*;
 import org.fest.assertions.Fail;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.spricom.dessert.resolve.ClassResolver;
-import de.spricom.dessert.slicing.Slice;
-import de.spricom.dessert.slicing.SliceAssertions;
-import de.spricom.dessert.slicing.SliceContext;
-import de.spricom.dessert.slicing.SliceEntry;
-import de.spricom.dessert.slicing.SliceSet;
 import de.spricom.dessert.util.DependencyGraph;
 import junit.framework.AssertionFailedError;
 
@@ -24,7 +20,7 @@ public class SpringTest {
     private static ClassResolver resolver;
 
     private SliceContext sc;
-    private SliceSet packages;
+    private ManifestSliceSet packages;
 
     @Before
     public void init() throws IOException {
