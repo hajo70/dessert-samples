@@ -4,10 +4,10 @@ import de.spricom.dessert.classfile.ClassFile;
 import de.spricom.dessert.classfile.constpool.ConstantPool;
 import de.spricom.dessert.classfile.dependency.DependencyHolder;
 import de.spricom.dessert.duplicates.DuplicateClassFinder;
-import de.spricom.dessert.resolve.ClassPredicate;
 import de.spricom.dessert.resolve.ClassResolver;
 import de.spricom.dessert.slicing.*;
 import de.spricom.dessert.traversal.ClassVisitor;
+import de.spricom.dessert.util.Predicate;
 import de.spricom.dessert.util.SetHelper;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -107,7 +107,7 @@ public class DessertDependenciesTest {
         // The ClassFile class is the facade for the classfile package. Nothing but
         // this class should be used outside this package.
         SliceSet classfile = sc.subPackagesOf(ClassFile.class.getPackage().getName())
-                .slice(new ClassPredicate<SliceEntry>() {
+                .slice(new Predicate<SliceEntry>() {
                     @Override
                     public boolean test(SliceEntry sliceEntry) {
                         return sliceEntry.getClassname().equals(ClassFile.class.getName());
@@ -118,7 +118,7 @@ public class DessertDependenciesTest {
         ManifestSliceSet util = sc.subPackagesOfManifested(SetHelper.class.getPackage());
 
         SliceAssertions.assertThat(util).usesOnly(javaCore);
-        SliceAssertions.assertThat(resolve).usesOnly(javaCore, javaIO, classfile);
+        SliceAssertions.assertThat(resolve).usesOnly(javaCore, javaIO, classfile, util);
         SliceAssertions.assertThat(slicing)
                 .uses(javaCore).and(javaIO).and(resolve).and(util).and(classfile)
                 .and(sc.subPackagesOf("java.net"))
