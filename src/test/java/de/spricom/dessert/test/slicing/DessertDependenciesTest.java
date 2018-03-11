@@ -1,13 +1,17 @@
 package de.spricom.dessert.test.slicing;
 
+import de.spricom.dessert.cycles.PackageSlice;
+import de.spricom.dessert.cycles.SliceGroup;
+import de.spricom.dessert.slicing.Slice;
+import de.spricom.dessert.assertions.SliceAssertions;
 import de.spricom.dessert.classfile.ClassFile;
 import de.spricom.dessert.classfile.constpool.ConstantPool;
 import de.spricom.dessert.classfile.dependency.DependencyHolder;
 import de.spricom.dessert.duplicates.DuplicateClassFinder;
+import de.spricom.dessert.util.Predicate;
 import de.spricom.dessert.resolve.ClassResolver;
 import de.spricom.dessert.slicing.*;
 import de.spricom.dessert.traversal.ClassVisitor;
-import de.spricom.dessert.util.Predicate;
 import de.spricom.dessert.util.SetHelper;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,8 +44,9 @@ public class DessertDependenciesTest {
      */
     @Test
     public void testPackagesAreCycleFree() {
-        ManifestSliceSet subPackages = sc.subPackagesOfManifested("de.spricom.dessert");
-        SliceAssertions.dessert(subPackages).isCycleFree();
+        Slice subPackages = sc.subPackagesOf("de.spricom.dessert");
+        SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(subPackages);
+        SliceAssertions.dessert(group).isCycleFree();
     }
 
     /**
@@ -51,9 +56,13 @@ public class DessertDependenciesTest {
      */
     @Test
     public void testNestedPackagesShouldNotUseOuterPackages() {
-        ManifestSliceSet subPackages = sc.subPackagesOfManifested("de.spricom.dessert");
-        for (Slice pckg : subPackages) {
-            SliceAssertions.assertThat(pckg).doesNotUse(pckg.getParentPackage());
+        Slice subPackages = sc.subPackagesOf("de.spricom.dessert");
+        SliceGroup<de.spricom.dessert.cycles.PackageSlice> group = SliceGroup.splitByPackage(subPackages);
+        for (de.spricom.dessert.cycles.PackageSlice pckg : group) {
+            PackageSlice parentPackage = group.getByName(pckg.getParentPackageName());
+            if (parentPackage != null) {
+                SliceAssertions.assertThat(pckg).doesNotUse(parentPackage);
+            }
         }
     }
 
@@ -63,9 +72,9 @@ public class DessertDependenciesTest {
      */
     @Test
     public void testExternalDependencies() {
-        ManifestSliceSet dessert = sc.subPackagesOfManifested("de.spricom.dessert")
-                .without(sc.subPackagesOfManifested("de.spricom.dessert.test"));
-        SliceSet java = sc.subPackagesOf("java.lang")
+        Slice dessert = sc.subPackagesOf("de.spricom.dessert")
+                .without(sc.subPackagesOf("de.spricom.dessert.test"));
+        Slice java = sc.subPackagesOf("java.lang")
                 .with(sc.subPackagesOf("java.util"))
                 .with(sc.subPackagesOf("java.io"))
                 .with(sc.subPackagesOf("java.net"))
@@ -83,14 +92,14 @@ public class DessertDependenciesTest {
      */
     @Test
     public void testClassfileDependencies() {
-        ManifestSliceSet classfile = sc.subPackagesOfManifested(ClassFile.class.getPackage());
-        SliceSet javaCore = sc.subPackagesOf("java.lang")
+        Slice classfile = sc.subPackagesOf(ClassFile.class.getPackage());
+        Slice javaCore = sc.subPackagesOf("java.lang")
                 .with(sc.subPackagesOf("java.util"));
-        SliceSet javaIO = sc.subPackagesOf("java.io").with(javaCore);
+        Slice javaIO = sc.subPackagesOf("java.io").with(javaCore);
         SliceAssertions.assertThat(classfile).usesOnly(javaIO);
-        ManifestSliceSet dependencyHolder = sc.subPackagesOfManifested(DependencyHolder.class.getPackage());
+        Slice dependencyHolder = sc.subPackagesOf(DependencyHolder.class.getPackage());
         SliceAssertions.assertThat(dependencyHolder).usesOnly(javaCore);
-        SliceAssertions.assertThat(sc.subPackagesOfManifested(ConstantPool.class.getPackage())).usesOnly(javaIO, dependencyHolder);
+        SliceAssertions.assertThat(sc.subPackagesOf(ConstantPool.class.getPackage())).usesOnly(javaIO, dependencyHolder);
     }
 
     /**
@@ -100,22 +109,22 @@ public class DessertDependenciesTest {
      */
     @Test
     public void testDessertDependencies() {
-        SliceSet javaCore = sc.subPackagesOf("java.lang")
+        Slice javaCore = sc.subPackagesOf("java.lang")
                 .with(sc.subPackagesOf("java.util"));
-        SliceSet javaIO = sc.subPackagesOf("java.io");
+        Slice javaIO = sc.subPackagesOf("java.io");
 
         // The ClassFile class is the facade for the classfile package. Nothing but
         // this class should be used outside this package.
-        SliceSet classfile = sc.subPackagesOf(ClassFile.class.getPackage().getName())
+        Slice classfile = sc.subPackagesOf(ClassFile.class.getPackage().getName())
                 .slice(new Predicate<SliceEntry>() {
                     @Override
                     public boolean test(SliceEntry sliceEntry) {
                         return sliceEntry.getClassname().equals(ClassFile.class.getName());
                     }
                 });
-        ManifestSliceSet resolve = sc.subPackagesOfManifested(ClassResolver.class.getPackage());
-        ManifestSliceSet slicing = sc.subPackagesOfManifested(SliceSet.class.getPackage());
-        ManifestSliceSet util = sc.subPackagesOfManifested(SetHelper.class.getPackage());
+        Slice resolve = sc.subPackagesOf(ClassResolver.class.getPackage());
+        Slice slicing = sc.subPackagesOf(Slice.class.getPackage());
+        Slice util = sc.subPackagesOf(SetHelper.class.getPackage());
 
         SliceAssertions.assertThat(util).usesOnly(javaCore);
         SliceAssertions.assertThat(resolve).usesOnly(javaCore, javaIO, classfile, util);
@@ -131,14 +140,14 @@ public class DessertDependenciesTest {
      */
     @Test
     public void testDuplicateClassFinderDependencies() {
-        ManifestSliceSet duplicates = sc.subPackagesOfManifested(DuplicateClassFinder.class.getPackage());
-        ManifestSliceSet traversal = sc.subPackagesOfManifested(ClassVisitor.class.getPackage());
-        SliceSet java = sc.subPackagesOf("java.lang")
+        Slice duplicates = sc.subPackagesOf(DuplicateClassFinder.class.getPackage());
+        Slice traversal = sc.subPackagesOf(ClassVisitor.class.getPackage());
+        Slice java = sc.subPackagesOf("java.lang")
                 .with(sc.subPackagesOf("java.util"))
                 .with(sc.subPackagesOf("java.io"));
 
-        SliceAssertions.assertThat(sc.subPackagesOfManifested("de.spricom.dessert")
-                .without(sc.subPackagesOfManifested("de.spricom.dessert.test"))
+        SliceAssertions.assertThat(sc.subPackagesOf("de.spricom.dessert")
+                .without(sc.subPackagesOf("de.spricom.dessert.test"))
                 .without(duplicates))
                 .doesNotUse(duplicates);
         SliceAssertions.assertThat(traversal).uses(java).only();

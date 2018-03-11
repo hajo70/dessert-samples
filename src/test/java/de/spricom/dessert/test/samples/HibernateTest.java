@@ -1,5 +1,8 @@
 package de.spricom.dessert.test.samples;
 
+import de.spricom.dessert.assertions.SliceAssertions;
+import de.spricom.dessert.cycles.SingleEntrySlice;
+import de.spricom.dessert.cycles.SliceGroup;
 import de.spricom.dessert.resolve.ClassResolver;
 import de.spricom.dessert.slicing.*;
 import de.spricom.dessert.util.DependencyGraph;
@@ -26,7 +29,7 @@ public class HibernateTest {
 
     @Test
     public void testCycleFree() throws IOException {
-        ManifestSliceSet packages = sc.packagesOf(resolver.getRootFiles());
+        SliceGroup<de.spricom.dessert.cycles.PackageSlice> packages = SliceGroup.splitByPackage(sc.packagesOf(resolver.getRootFiles()));
         try {
             SliceAssertions.assertThat(packages).isCycleFree();
             Fail.fail("No cycle found");
@@ -37,23 +40,12 @@ public class HibernateTest {
 
     @Test
     public void testClasses() {
-        ManifestSliceSet packages = sc.subPackagesOfManifested("org.hibernate");
-        Set<SliceEntry> classes = new HashSet<>();
-        for (Slice slice : packages) {
-            classes.addAll(slice.getEntries());
-        }
-        DependencyGraph<SliceEntry> dag = new DependencyGraph<>();
-        for (SliceEntry n : classes) {
-            for (SliceEntry m : classes) {
-                if (n != m && !n.getPackageName().equals(m.getPackageName()) && n.getUsedClasses().contains(m)) {
-                    dag.addDependency(n, m);
-                }
-            }
-        }
-        assertThat(dag.isCycleFree()).isFalse();
-        System.out.println("Class-Cycle:");
-        for (SliceEntry entry : dag.getCycle()) {
-            System.out.println("-> " + entry.getClassname());
+        SliceGroup<SingleEntrySlice> packages = SliceGroup.splitByEntry(sc.packagesOf(resolver.getRootFiles()));
+        try {
+            SliceAssertions.assertThat(packages).isCycleFree();
+            Fail.fail("No cycle found");
+        } catch (AssertionError ae) {
+            System.out.println(ae.toString());
         }
     }
 

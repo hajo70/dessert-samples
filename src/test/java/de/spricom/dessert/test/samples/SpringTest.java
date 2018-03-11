@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.spricom.dessert.assertions.SliceAssertions;
+import de.spricom.dessert.cycles.SingleEntrySlice;
+import de.spricom.dessert.cycles.SliceGroup;
 import de.spricom.dessert.slicing.*;
 import org.fest.assertions.Fail;
 import org.junit.Before;
@@ -14,13 +17,12 @@ import org.junit.Test;
 
 import de.spricom.dessert.resolve.ClassResolver;
 import de.spricom.dessert.util.DependencyGraph;
-import junit.framework.AssertionFailedError;
 
 public class SpringTest {
     private static ClassResolver resolver;
 
     private SliceContext sc;
-    private ManifestSliceSet packages;
+    private ConcreteSlice packages;
 
     @Before
     public void init() throws IOException {
@@ -32,35 +34,26 @@ public class SpringTest {
     public void testPackageCycles() throws IOException {
         packages = packages.without(sc.subPackagesOf("org.springframework.cglib.core"));
         packages = packages.without(sc.subPackagesOf("org.springframework.objenesis"));
-        SliceAssertions.assertThat(packages).isCycleFree();
+        SliceAssertions.assertThat(SliceGroup.splitByPackage(packages)).isCycleFree();
     }
 
     @Test
     public void testClassCycles() {
-        Set<SliceEntry> classes = new HashSet<>();
-        for (Slice slice : packages) {
-            classes.addAll(slice.getEntries());
-        }
-        DependencyGraph<SliceEntry> dag = new DependencyGraph<>();
-        for (SliceEntry n : classes) {
-            for (SliceEntry m : classes) {
-                if (n != m && !isSameClass(n, m) && n.getUsedClasses().contains(m)) {
-                    dag.addDependency(n, m);
-                }
-            }
-        }
-        assertThat(dag.isCycleFree()).isFalse();
-        System.out.println("Class-Cycle:");
-        for (SliceEntry entry : dag.getCycle()) {
-            System.out.println("-> " + entry.getClassname());
+        SliceGroup<SingleEntrySlice> packages = SliceGroup.splitByEntry(sc.packagesOf(resolver.getRootFiles()));
+        try {
+            SliceAssertions.assertThat(packages).isCycleFree();
+            Fail.fail("No cycle found");
+        } catch (AssertionError ae) {
+            System.out.println(ae.toString());
         }
     }
 
     @Test
     public void testNestedPackageDependencies() {
         try {
-            for (Slice slice : packages) {
-                SliceAssertions.assertThat(slice).doesNotUse(slice.getParentPackage());
+            SliceGroup<de.spricom.dessert.cycles.PackageSlice> group = SliceGroup.splitByPackage(packages);
+            for (de.spricom.dessert.cycles.PackageSlice slice : group) {
+                SliceAssertions.assertThat(slice).doesNotUse(slice.getParentPackage(group));
             }
             Fail.fail("No dependency found");
         } catch (AssertionError ae) {
@@ -71,17 +64,14 @@ public class SpringTest {
     @Test
     public void testOuterPackageDependencies() {
         try {
-            for (Slice slice : packages) {
-                SliceAssertions.assertThat(slice.getParentPackage()).doesNotUse(slice);
+            SliceGroup<de.spricom.dessert.cycles.PackageSlice> group = SliceGroup.splitByPackage(packages);
+            for (de.spricom.dessert.cycles.PackageSlice slice : group) {
+                SliceAssertions.assertThat(slice.getParentPackage(group)).doesNotUse(slice);
             }
             Fail.fail("No dependency found");
         } catch (AssertionError ae) {
             System.out.println(ae.getMessage());
         }
-    }
-
-    private boolean isSameClass(SliceEntry s1, SliceEntry s2) {
-        return s1.getClassname().startsWith(s2.getClassname()) || s2.getClassname().startsWith(s1.getClassname());
     }
 
     private static ClassResolver getSpringJarsResolver() throws IOException {
