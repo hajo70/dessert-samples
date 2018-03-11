@@ -1,8 +1,8 @@
 package de.spricom.dessert.test.slicing;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.cycles.PackageSlice;
-import de.spricom.dessert.cycles.SliceGroup;
+import de.spricom.dessert.slicing.PackageSlice;
+import de.spricom.dessert.slicing.SliceGroup;
 import de.spricom.dessert.slicing.Slice;
 import de.spricom.dessert.slicing.SliceContext;
 import org.junit.Test;
@@ -22,13 +22,13 @@ public class GettingStartedTest {
 
     @Test
     public void checkPackagesAreCycleFree() throws IOException {
-        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(new SliceContext().subPackagesOf("de.spricom.dessert"));
-        SliceAssertions.dessert(subPackages).isCycleFree();
+        Slice subPackages = new SliceContext().subPackagesOf("de.spricom.dessert");
+        SliceAssertions.dessert(subPackages).splitByPackage().isCycleFree();
     }
 
     @Test
     public void checkNestedPackagesShouldNotUseOuterPackages() throws IOException {
-        SliceGroup<de.spricom.dessert.cycles.PackageSlice> subPackages = SliceGroup.splitByPackage(new SliceContext().subPackagesOf("de.spricom.dessert"));
+        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(new SliceContext().subPackagesOf("de.spricom.dessert"));
         for (PackageSlice pckg : subPackages) {
             SliceAssertions.assertThat(pckg).doesNotUse(pckg.getParentPackage(subPackages));
         }

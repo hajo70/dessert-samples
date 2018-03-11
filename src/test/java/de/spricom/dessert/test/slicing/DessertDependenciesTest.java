@@ -1,7 +1,7 @@
 package de.spricom.dessert.test.slicing;
 
-import de.spricom.dessert.cycles.PackageSlice;
-import de.spricom.dessert.cycles.SliceGroup;
+import de.spricom.dessert.slicing.PackageSlice;
+import de.spricom.dessert.slicing.SliceGroup;
 import de.spricom.dessert.slicing.Slice;
 import de.spricom.dessert.assertions.SliceAssertions;
 import de.spricom.dessert.classfile.ClassFile;
@@ -45,8 +45,7 @@ public class DessertDependenciesTest {
     @Test
     public void testPackagesAreCycleFree() {
         Slice subPackages = sc.subPackagesOf("de.spricom.dessert");
-        SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(subPackages);
-        SliceAssertions.dessert(group).isCycleFree();
+        SliceAssertions.dessert(subPackages).splitByPackage().isCycleFree();
     }
 
     /**
@@ -57,8 +56,8 @@ public class DessertDependenciesTest {
     @Test
     public void testNestedPackagesShouldNotUseOuterPackages() {
         Slice subPackages = sc.subPackagesOf("de.spricom.dessert");
-        SliceGroup<de.spricom.dessert.cycles.PackageSlice> group = SliceGroup.splitByPackage(subPackages);
-        for (de.spricom.dessert.cycles.PackageSlice pckg : group) {
+        SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(subPackages);
+        for (PackageSlice pckg : group) {
             PackageSlice parentPackage = group.getByName(pckg.getParentPackageName());
             if (parentPackage != null) {
                 SliceAssertions.assertThat(pckg).doesNotUse(parentPackage);

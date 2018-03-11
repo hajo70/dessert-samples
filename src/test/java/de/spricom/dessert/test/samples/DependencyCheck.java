@@ -1,19 +1,21 @@
 package de.spricom.dessert.test.samples;
 
-import java.io.IOException;
-
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.cycles.PackageSlice;
-import de.spricom.dessert.cycles.SliceGroup;
-import de.spricom.dessert.slicing.*;
+import de.spricom.dessert.slicing.PackageSlice;
+import de.spricom.dessert.slicing.Slice;
+import de.spricom.dessert.slicing.SliceContext;
+import de.spricom.dessert.slicing.SliceGroup;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class DependencyCheck {
 
     @Test
     public void testPackageDependencies() throws IOException {
-        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(new SliceContext().subPackagesOf("de.spricom.dessert"));
-        SliceAssertions.dessert(subPackages).isCycleFree();
-        subPackages.forEach(slice -> SliceAssertions.assertThat(slice).doesNotUse(slice.getParentPackage(subPackages)));
+        Slice slice = new SliceContext().subPackagesOf("de.spricom.dessert");
+        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(slice);
+        SliceAssertions.dessert(slice).splitByPackage().isCycleFree();
+        subPackages.forEach(pckg -> SliceAssertions.assertThat(pckg).doesNotUse(pckg.getParentPackage(subPackages)));
     }
 }

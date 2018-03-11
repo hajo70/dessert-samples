@@ -4,19 +4,16 @@ import static org.fest.assertions.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.cycles.SingleEntrySlice;
-import de.spricom.dessert.cycles.SliceGroup;
+import de.spricom.dessert.slicing.SingleEntrySlice;
+import de.spricom.dessert.slicing.SliceGroup;
 import de.spricom.dessert.slicing.*;
 import org.fest.assertions.Fail;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.spricom.dessert.resolve.ClassResolver;
-import de.spricom.dessert.util.DependencyGraph;
 
 public class SpringTest {
     private static ClassResolver resolver;
@@ -34,14 +31,13 @@ public class SpringTest {
     public void testPackageCycles() throws IOException {
         packages = packages.without(sc.subPackagesOf("org.springframework.cglib.core"));
         packages = packages.without(sc.subPackagesOf("org.springframework.objenesis"));
-        SliceAssertions.assertThat(SliceGroup.splitByPackage(packages)).isCycleFree();
+        SliceAssertions.assertThat(packages).splitByPackage().isCycleFree();
     }
 
     @Test
     public void testClassCycles() {
-        SliceGroup<SingleEntrySlice> packages = SliceGroup.splitByEntry(sc.packagesOf(resolver.getRootFiles()));
         try {
-            SliceAssertions.assertThat(packages).isCycleFree();
+            SliceAssertions.assertThat(sc.packagesOf(resolver.getRootFiles())).splitByPackage().isCycleFree();
             Fail.fail("No cycle found");
         } catch (AssertionError ae) {
             System.out.println(ae.toString());
@@ -51,8 +47,8 @@ public class SpringTest {
     @Test
     public void testNestedPackageDependencies() {
         try {
-            SliceGroup<de.spricom.dessert.cycles.PackageSlice> group = SliceGroup.splitByPackage(packages);
-            for (de.spricom.dessert.cycles.PackageSlice slice : group) {
+            SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(packages);
+            for (PackageSlice slice : group) {
                 SliceAssertions.assertThat(slice).doesNotUse(slice.getParentPackage(group));
             }
             Fail.fail("No dependency found");
@@ -64,8 +60,8 @@ public class SpringTest {
     @Test
     public void testOuterPackageDependencies() {
         try {
-            SliceGroup<de.spricom.dessert.cycles.PackageSlice> group = SliceGroup.splitByPackage(packages);
-            for (de.spricom.dessert.cycles.PackageSlice slice : group) {
+            SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(packages);
+            for (PackageSlice slice : group) {
                 SliceAssertions.assertThat(slice.getParentPackage(group)).doesNotUse(slice);
             }
             Fail.fail("No dependency found");

@@ -1,19 +1,16 @@
 package de.spricom.dessert.test.samples;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.cycles.SingleEntrySlice;
-import de.spricom.dessert.cycles.SliceGroup;
+import de.spricom.dessert.slicing.SingleEntrySlice;
+import de.spricom.dessert.slicing.SliceGroup;
 import de.spricom.dessert.resolve.ClassResolver;
 import de.spricom.dessert.slicing.*;
-import de.spricom.dessert.util.DependencyGraph;
 import org.fest.assertions.Fail;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.fest.assertions.Assertions.assertThat;
 
@@ -29,9 +26,8 @@ public class HibernateTest {
 
     @Test
     public void testCycleFree() throws IOException {
-        SliceGroup<de.spricom.dessert.cycles.PackageSlice> packages = SliceGroup.splitByPackage(sc.packagesOf(resolver.getRootFiles()));
         try {
-            SliceAssertions.assertThat(packages).isCycleFree();
+            SliceAssertions.assertThat(sc.packagesOf(resolver.getRootFiles())).splitByPackage().isCycleFree();
             Fail.fail("No cycle found");
         } catch (AssertionError ae) {
             System.out.println(ae.toString());
@@ -40,9 +36,8 @@ public class HibernateTest {
 
     @Test
     public void testClasses() {
-        SliceGroup<SingleEntrySlice> packages = SliceGroup.splitByEntry(sc.packagesOf(resolver.getRootFiles()));
         try {
-            SliceAssertions.assertThat(packages).isCycleFree();
+            SliceAssertions.assertThat(sc.packagesOf(resolver.getRootFiles())).splitByPackage().isCycleFree();
             Fail.fail("No cycle found");
         } catch (AssertionError ae) {
             System.out.println(ae.toString());
