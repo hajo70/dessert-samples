@@ -1,25 +1,23 @@
 package de.spricom.dessert.test.samples;
 
-import static org.fest.assertions.Assertions.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-
 import de.spricom.dessert.assertions.SliceAssertions;
 import de.spricom.dessert.groups.PackageSlice;
 import de.spricom.dessert.groups.SliceGroup;
-import de.spricom.dessert.slicing.*;
+import de.spricom.dessert.resolve.ClassResolver;
+import de.spricom.dessert.slicing.Slice;
+import de.spricom.dessert.slicing.SliceContext;
 import org.fest.assertions.Fail;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.spricom.dessert.resolve.ClassResolver;
+import java.io.File;
+import java.io.IOException;
 
 public class SpringTest {
     private static ClassResolver resolver;
 
     private SliceContext sc;
-    private ConcreteSlice packages;
+    private Slice packages;
 
     @Before
     public void init() throws IOException {
