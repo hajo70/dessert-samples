@@ -27,8 +27,8 @@ public class SpringTest {
 
     @Test
     public void testPackageCycles() throws IOException {
-        packages = packages.without(sc.subPackagesOf("org.springframework.cglib.core"));
-        packages = packages.without(sc.subPackagesOf("org.springframework.objenesis"));
+        packages = packages.without(sc.packageTreeOf("org.springframework.cglib.core"));
+        packages = packages.without(sc.packageTreeOf("org.springframework.objenesis"));
         SliceAssertions.assertThat(packages).splitByPackage().isCycleFree();
     }
 

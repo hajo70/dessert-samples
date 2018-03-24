@@ -13,7 +13,7 @@ public class DependencyCheck {
 
     @Test
     public void testPackageDependencies() throws IOException {
-        Slice slice = new SliceContext().subPackagesOf("de.spricom.dessert");
+        Slice slice = new SliceContext().packageTreeOf("de.spricom.dessert");
         SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(slice);
         SliceAssertions.dessert(slice).splitByPackage().isCycleFree();
         subPackages.forEach(pckg -> SliceAssertions.assertThat(pckg).doesNotUse(pckg.getParentPackage(subPackages)));

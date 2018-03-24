@@ -14,21 +14,21 @@ public class GettingStartedTest {
     @Test
     public void checkDessertDependencies() throws IOException {
         SliceContext sc = new SliceContext();
-        Slice dessert = sc.subPackagesOf("de.spricom.dessert")
-                .without(sc.subPackagesOf("de.spricom.dessert.test"));
-        Slice java = sc.subPackagesOf("java");
+        Slice dessert = sc.packageTreeOf("de.spricom.dessert")
+                .without(sc.packageTreeOf("de.spricom.dessert.test"));
+        Slice java = sc.packageTreeOf("java");
         SliceAssertions.assertThat(dessert).usesOnly(java);
     }
 
     @Test
     public void checkPackagesAreCycleFree() throws IOException {
-        Slice subPackages = new SliceContext().subPackagesOf("de.spricom.dessert");
+        Slice subPackages = new SliceContext().packageTreeOf("de.spricom.dessert");
         SliceAssertions.dessert(subPackages).splitByPackage().isCycleFree();
     }
 
     @Test
     public void checkNestedPackagesShouldNotUseOuterPackages() throws IOException {
-        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(new SliceContext().subPackagesOf("de.spricom.dessert"));
+        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(new SliceContext().packageTreeOf("de.spricom.dessert"));
         for (PackageSlice pckg : subPackages) {
             SliceAssertions.assertThat(pckg).doesNotUse(pckg.getParentPackage(subPackages));
         }
