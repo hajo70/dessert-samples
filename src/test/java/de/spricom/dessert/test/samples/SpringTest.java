@@ -6,8 +6,8 @@ import java.io.File;
 import java.io.IOException;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.slicing.SingleEntrySlice;
-import de.spricom.dessert.slicing.SliceGroup;
+import de.spricom.dessert.groups.PackageSlice;
+import de.spricom.dessert.groups.SliceGroup;
 import de.spricom.dessert.slicing.*;
 import org.fest.assertions.Fail;
 import org.junit.Before;

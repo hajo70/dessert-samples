@@ -1,10 +1,10 @@
 package de.spricom.dessert.test.samples;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.slicing.PackageSlice;
+import de.spricom.dessert.groups.PackageSlice;
 import de.spricom.dessert.slicing.Slice;
 import de.spricom.dessert.slicing.SliceContext;
-import de.spricom.dessert.slicing.SliceGroup;
+import de.spricom.dessert.groups.SliceGroup;
 import org.junit.Test;
 
 import java.io.IOException;

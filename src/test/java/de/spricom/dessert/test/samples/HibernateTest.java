@@ -1,8 +1,6 @@
 package de.spricom.dessert.test.samples;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.slicing.SingleEntrySlice;
-import de.spricom.dessert.slicing.SliceGroup;
 import de.spricom.dessert.resolve.ClassResolver;
 import de.spricom.dessert.slicing.*;
 import org.fest.assertions.Fail;

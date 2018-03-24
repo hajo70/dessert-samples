@@ -1,7 +1,7 @@
 package de.spricom.dessert.test.slicing;
 
-import de.spricom.dessert.slicing.PackageSlice;
-import de.spricom.dessert.slicing.SliceGroup;
+import de.spricom.dessert.groups.PackageSlice;
+import de.spricom.dessert.groups.SliceGroup;
 import de.spricom.dessert.slicing.Slice;
 import de.spricom.dessert.assertions.SliceAssertions;
 import de.spricom.dessert.classfile.ClassFile;
@@ -58,7 +58,7 @@ public class DessertDependenciesTest {
         Slice subPackages = sc.subPackagesOf("de.spricom.dessert");
         SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(subPackages);
         for (PackageSlice pckg : group) {
-            PackageSlice parentPackage = group.getByName(pckg.getParentPackageName());
+            PackageSlice parentPackage = group.getByPartKey(pckg.getParentPackageName());
             if (parentPackage != null) {
                 SliceAssertions.assertThat(pckg).doesNotUse(parentPackage);
             }
