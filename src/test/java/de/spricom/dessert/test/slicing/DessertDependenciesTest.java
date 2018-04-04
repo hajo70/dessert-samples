@@ -1,22 +1,24 @@
 package de.spricom.dessert.test.slicing;
 
-import de.spricom.dessert.groups.PackageSlice;
-import de.spricom.dessert.groups.SliceGroup;
-import de.spricom.dessert.slicing.Slice;
 import de.spricom.dessert.assertions.SliceAssertions;
 import de.spricom.dessert.classfile.ClassFile;
 import de.spricom.dessert.classfile.constpool.ConstantPool;
 import de.spricom.dessert.classfile.dependency.DependencyHolder;
 import de.spricom.dessert.duplicates.DuplicateClassFinder;
-import de.spricom.dessert.util.Predicate;
+import de.spricom.dessert.groups.PackageSlice;
+import de.spricom.dessert.groups.SliceGroup;
 import de.spricom.dessert.resolve.ClassResolver;
-import de.spricom.dessert.slicing.*;
+import de.spricom.dessert.slicing.Slice;
+import de.spricom.dessert.slicing.SliceContext;
+import de.spricom.dessert.slicing.SliceEntry;
 import de.spricom.dessert.traversal.ClassVisitor;
+import de.spricom.dessert.util.Predicate;
 import de.spricom.dessert.util.SetHelper;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * This test checks the dependencies of the dessert library. It's an example on how
@@ -110,7 +112,8 @@ public class DessertDependenciesTest {
     public void testDessertDependencies() {
         Slice javaCore = sc.packageTreeOf("java.lang")
                 .with(sc.packageTreeOf("java.util"));
-        Slice javaIO = sc.packageTreeOf("java.io");
+        Slice javaIO = sc.packageTreeOf("java.io")
+                .with(sc.packageTreeOf(URI.class));
 
         // The ClassFile class is the facade for the classfile package. Nothing but
         // this class should be used outside this package.

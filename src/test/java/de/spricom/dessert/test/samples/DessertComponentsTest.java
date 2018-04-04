@@ -5,7 +5,6 @@ import de.spricom.dessert.slicing.SliceContext;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 
@@ -14,7 +13,7 @@ import static de.spricom.dessert.assertions.SliceAssertions.dessert;
 public class DessertComponentsTest {
 
     @Test
-    public void testDessertComponents() throws IOException {
+    public void testDessertComponents() {
         SliceContext sc = new SliceContext();
 
         Slice java = sc.packageTreeOf(String.class)
