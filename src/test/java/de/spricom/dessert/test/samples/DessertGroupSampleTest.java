@@ -21,9 +21,10 @@ public class DessertGroupSampleTest {
     @Test
     public void testPackageDependencies() throws IOException {
         Slice slice = new SliceContext().packageTreeOf("de.spricom.dessert");
-        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(slice);
+        SliceGroup<PackageSlice> packages = SliceGroup.splitByPackage(slice);
 
-        subPackages.forEach(pckg -> SliceAssertions.assertThat(pckg)
-                .doesNotUse(pckg.getParentPackage(subPackages)));
+        packages.forEach(pckg -> SliceAssertions.assertThat(pckg)
+                .doesNotUse(pckg.getParentPackage(packages)));
+
     }
 }

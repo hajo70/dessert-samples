@@ -14,8 +14,8 @@ public class MvpSampleTest {
 
     @Test
     public void testUsingNamingConvention() {
-        Slice presenters = mvp.slice(se -> se.getClassname().endsWith("Presenter"));
-        Slice views = mvp.slice(se -> se.getClassname().endsWith("ViewImpl"));
+        Slice presenters = mvp.slice(se -> se.getClassName().endsWith("Presenter"));
+        Slice views = mvp.slice(se -> se.getClassName().endsWith("ViewImpl"));
         assertThat(presenters).doesNotUse(views);
     }
 
