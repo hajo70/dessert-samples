@@ -14,7 +14,11 @@ public class DessertGroupSampleTest {
     @Test
     public void testCycleFree() throws IOException {
         Slice slice = new SliceContext().packageTreeOf("de.spricom.dessert");
-        SliceGroup<PackageSlice> subPackages = SliceGroup.splitByPackage(slice);
+
+        SliceGroup<PackageSlice> sg = SliceGroup.splitByPackage(slice);
+        SliceAssertions.dessert(sg).isCycleFree();
+
+        // short form:
         SliceAssertions.dessert(slice).splitByPackage().isCycleFree();
     }
 
