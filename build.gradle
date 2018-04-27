@@ -9,7 +9,7 @@ repositories {
 sourceCompatibility = 1.9
 
 dependencies {
-    testCompile 'com.github.hajo70:dessert:0.3-SNAPSHOT'
+    testCompile 'com.github.hajo70:dessert:0.3'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.easytesting:fest-assert:1.4'
