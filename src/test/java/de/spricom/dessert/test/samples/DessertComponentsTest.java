@@ -34,5 +34,6 @@ public class DessertComponentsTest {
         dessert(slicing).usesOnly(resolve, util, classfile, java);
         dessert(resolve).usesOnly(util, classfile, java);
         dessert(classfile).usesOnly(java);
+        dessert(util).usesOnly(java);
     }
 }
