@@ -6,7 +6,6 @@ import de.spricom.dessert.groups.SliceGroup;
 import de.spricom.dessert.slicing.ConcreteSlice;
 import de.spricom.dessert.slicing.Slice;
 import de.spricom.dessert.slicing.SliceContext;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.fest.assertions.Assertions.assertThat;
@@ -43,7 +42,6 @@ public class DessertGroupSampleTest {
                 .doesNotUse(slice.slice(entry -> pckg.getParentPackageName().startsWith(entry.getPackageName()))));
     }
 
-    @Ignore
     @Test
     public void testNoDuplicates() {
         ConcreteSlice duplicates = new SliceContext().duplicates();
