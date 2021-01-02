@@ -1,0 +1,10 @@
+= dessert dependencies tests
+
+This module compares the dependencies determined by _dessert-core_
+with those found by the `jdeps` tool which is part of the JDK.
+Therefore this module a has a lot of test dependencies.
+
+For each class within the test dependencies _dessert-core_ and `jdeps`
+determine the the same class-dependencies, except some corner cases
+mentioned below:
+
