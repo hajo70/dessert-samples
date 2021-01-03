@@ -2,10 +2,12 @@ package de.spricom.dessert.jdeps;
 
 import de.spricom.dessert.classfile.ClassFile;
 import org.assertj.core.api.AbstractObjectAssert;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+@Disabled
 public class InvestigateSpecialCasesTest {
 
     /**
