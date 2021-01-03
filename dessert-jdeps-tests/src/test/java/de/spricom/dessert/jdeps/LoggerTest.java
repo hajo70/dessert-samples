@@ -21,6 +21,6 @@ public class LoggerTest {
     void testParams() {
         log.info("test val1 {} val2 {}", 17, 42);
         log.info("test val1 %s val2 %d", "xx", 42);
-        log.info("test {} with exception", 42, new Exception("dummy"));
+        log.debug("test {} with exception", 42, new Exception("dummy"));
     }
 }

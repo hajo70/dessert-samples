@@ -74,6 +74,59 @@
                     <forceJavacCompilerUse>true</forceJavacCompilerUse>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <!-- usage: mvn exec:exec -->
+                        <id>default-cli</id>
+                        <configuration>
+                            <classpathScope>test</classpathScope>
+                            <executable>jdeps</executable>
+                            <arguments>
+                                <argument>-verbose:class</argument>
+                                <argument>-filter:none</argument>
+                                <argument>--multi-release</argument>
+                                <argument>base</argument>
+                                <argument>--ignore-missing-deps</argument>
+                                <argument>--module-path</argument>
+                                <modulepath/>
+                                <argument>
+                                    C:\Users\hjhessmann\.m2\repository\org\junit\platform\junit-platform-launcher\1.7.0\junit-platform-launcher-1.7.0.jar
+                                </argument>
+                                <!-- <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency> -->
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- usage: mvn exec:exec@version -->
+                        <id>version</id>
+                        <configuration>
+                            <executable>jdeps</executable>
+                            <arguments>
+                                <argument>-version</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- usage: mvn exec:exec@help -->
+                        <id>help</id>
+                        <configuration>
+                            <executable>jdeps</executable>
+                            <arguments>
+                                <argument>-help</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

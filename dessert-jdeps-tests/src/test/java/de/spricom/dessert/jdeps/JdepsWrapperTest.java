@@ -1,14 +1,11 @@
 package de.spricom.dessert.jdeps;
 
-import de.spricom.dessert.slicing.SliceEntry;
 import de.spricom.dessert.util.LookupUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.event.TreeSelectionEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Set;
 import java.util.TreeSet;
 

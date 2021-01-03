@@ -24,6 +24,7 @@ public class JdepsWrapper {
     private static final Pattern DEST_REGEX = Pattern.compile("^.*-> ([\\w.$]+)\\s+.*$");
 
     private String classPath = System.getProperty("java.class.path");
+    private String classPathOption = "-cp";
     private String jdepsCommand = System.getProperty("jdeps.command","jdeps");
     private List<String> options = new ArrayList<String>(Arrays.asList("-verbose:class", "-filter:none"));
 
@@ -96,7 +97,7 @@ public class JdepsWrapper {
         List<String> command = new ArrayList<String>();
         command.add(jdepsCommand);
         command.addAll(options);
-        command.add("-cp");
+        command.add(classPathOption);
         command.add(classPath);
         command.add(path.getPath());
         return command;
@@ -116,6 +117,14 @@ public class JdepsWrapper {
 
     public void setJdepsCommand(String jdepsCommand) {
         this.jdepsCommand = jdepsCommand;
+    }
+
+    public String getClassPathOption() {
+        return classPathOption;
+    }
+
+    public void setClassPathOption(String classPathOption) {
+        this.classPathOption = classPathOption;
     }
 
     public List<String> getOptions() {
