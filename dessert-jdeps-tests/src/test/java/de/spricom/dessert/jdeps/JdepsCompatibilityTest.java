@@ -6,7 +6,6 @@ import de.spricom.dessert.classfile.MethodInfo;
 import de.spricom.dessert.classfile.attribute.*;
 import de.spricom.dessert.traversal.ClassVisitor;
 import de.spricom.dessert.traversal.PathProcessor;
-import de.spricom.dessert.util.LookupUtil;
 import de.spricom.dessert.util.SetHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,12 +15,12 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 public class JdepsCompatibilityTest implements ClassVisitor {
     private static final Logger log = LogManager.getLogger(JdepsCompatibilityTest.class);
@@ -78,8 +77,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
                 "junit-jupiter-api-5.7.0.jar",
                 "junit-platform-commons-1.7.0.jar",
                 "junit-jupiter-engine-5.7.0.jar",
-                "junit-platform-engine-1.7.0.jar",
-                "assertj-core-3.18.1.jar"
+                "junit-platform-engine-1.7.0.jar"
         ).contains(jarFile.getName());
     }
 
@@ -93,7 +91,6 @@ public class JdepsCompatibilityTest implements ClassVisitor {
             Thread.currentThread().interrupt();
         }
     }
-
 
     private void check(PathProcessor proc) throws IOException {
         proc.traverseAllClasses(this);
@@ -111,49 +108,33 @@ public class JdepsCompatibilityTest implements ClassVisitor {
             assertThat(cfdeps).as(name).containsAll(jdeps);
 
             if (cfdeps.size() != jdeps.size()) {
-                log.info(() -> "Dessert found additional dependencies for " + name + ":\n" + diff(cfdeps, jdeps));
+                handleDiff(name, cf, cfdeps, jdeps);
             }
-            // assertDependenciesMatch(root, classname, cfdeps, jdeps, cf);
         } catch (IOException ex) {
             throw new RuntimeException("Processing " + classname + " in " + root.getAbsolutePath() + " failed.", ex);
         }
     }
 
-    private String diff(Set<String> cfdeps, Set<String> jdeps) {
-        return SetHelper.subtract(cfdeps, jdeps).stream().collect(Collectors.joining("\n"));
-    }
-
-    private void assertDependenciesMatch(File root, String classname, Set<String> cfdeps, Set<String> jdeps, ClassFile cf) {
-        if (cfdeps.equals(jdeps)) {
+    private void handleDiff(String name, ClassFile cf, Set<String> cfdeps, Set<String> jdeps) {
+        Set<String> diff = SetHelper.subtract(cfdeps, jdeps);
+        log.info(() -> "Dessert found additional dependencies for " + name + ":\n" +
+                diff.stream().collect(Collectors.joining("\n")));
+        if (name.contains("module-info[")) {
             return;
         }
-        if (!SetHelper.containsAll(cfdeps, jdeps)) {
-            log.info("Dump of jdeps-dependencies:\n" + dump(jdeps));
-            fail("Dependencies of " + classname + " in " + root + " don't contain " + SetHelper.subtract(jdeps, cfdeps)
-                    + "\ndessert: " + cfdeps
-                    + "\n  jdeps: " + jdeps);
-        }
-        // See https://bugs.openjdk.java.net/browse/JDK-8134625.
-        Set<String> diff = SetHelper.subtract(cfdeps, jdeps);
-        log.info("Additional dependencies detected for " + classname + " in " + root + ": " + diff
-                + "\ndessert: " + cfdeps
-                + "\n  jdeps: " + jdeps);
-        Set<String> additionalDependencies = determineDependenciesNotDetectedByJDeps(cf);
-        if (!SetHelper.containsAll(additionalDependencies, diff)) {
-            log.info("Dump of jdeps-dependencies:\n" + dump(jdeps));
-            fail("Dependencies of " + classname + " in " + root + " has unexpected additional dependencies " + SetHelper.subtract(diff, additionalDependencies)
-                    + "\ndessert: " + cfdeps
-                    + "\n  jdeps: " + jdeps
-                    + "\n   diff: " + diff);
-        }
+        Set<String> expectedDiff = determineDependenciesNotDetectedByJDeps(cf);
+        expectedDiff.addAll(specialCases(name));
+        assertThat(expectedDiff).containsAll(diff);
     }
 
-    private String dump(Set<String> deps) {
-        StringBuilder sb = new StringBuilder();
-        for (String cn : deps) {
-            sb.append("\"").append(cn).append("\",\n");
+    private Set<String> specialCases(String name) {
+        switch (name) {
+            case "org.assertj.core.api.AbstractObjectAssert[assertj-core-3.18.1.jar]":
+            case "org.assertj.core.api.InstanceOfAssertFactories[assertj-core-3.18.1.jar]":
+                return Set.of("org.assertj.core.api.Assert");
+            default:
+                return Collections.emptySet();
         }
-        return sb.toString();
     }
 
     private Set<String> determineDependenciesNotDetectedByJDeps(ClassFile cf) {
@@ -163,6 +144,9 @@ public class JdepsCompatibilityTest implements ClassVisitor {
         return referencedClasses;
     }
 
+    /**
+     * JDeps does not consider parameters of generic types to be a dependency.
+     */
     private void determineClassesReferencedBySignatureAttribute(Set<String> referencedClasses, ClassFile cf) {
         for (AttributeInfo attribute : cf.getAttributes()) {
             if (attribute instanceof SignatureAttribute) {
@@ -171,6 +155,9 @@ public class JdepsCompatibilityTest implements ClassVisitor {
         }
     }
 
+    /**
+     * Jdeps does not consider parameters of a runtime-annotation to be a dependency.
+     */
     private void determineClassesReferencedByRuntimeAnnotations(Set<String> referencedClasses, ClassFile cf) {
         collectReferencedClasses(referencedClasses, cf.getAttributes());
         for (FieldInfo fieldInfo : cf.getFields()) {
