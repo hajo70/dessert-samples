@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 public class DirectoryProcessor implements ClassProcessor {
 
@@ -28,17 +29,12 @@ public class DirectoryProcessor implements ClassProcessor {
     }
 
     private void traverse(File dir, String packageName, ClassVisitor visitor) throws IOException {
-        for (File file : dir.listFiles()) {
+        for (File file : Objects.requireNonNull(dir.listFiles(), "not a directory: " + dir)) {
             if (file.isDirectory()) {
                 traverse(file, concat(packageName, file.getName()), visitor);
             } else if (file.isFile() && file.getName().endsWith(".class")) {
-                InputStream is = new FileInputStream(file);
-                try {
+                try (InputStream is = new FileInputStream(file)) {
                     visitor.visit(root, concat(packageName, className(file)), is);
-                } finally {
-                    if (is != null) {
-                        is.close();
-                    }
                 }
             }
         }

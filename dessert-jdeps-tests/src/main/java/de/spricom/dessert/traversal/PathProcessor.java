@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class PathProcessor implements ClassProcessor {
-    private static Logger log = Logger.getLogger(PathProcessor.class.getName());
+    private static final Logger log = Logger.getLogger(PathProcessor.class.getName());
 
     private String path;
 
@@ -15,7 +15,7 @@ public class PathProcessor implements ClassProcessor {
     }
 
     @Override
-    public void traverseAllClasses(ClassVisitor visitor) throws IOException {
+    public void traverseAllClasses(ClassVisitor visitor) {
         for (String file : path.split(File.pathSeparator)) {
             process(file, visitor);
         }

@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +30,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
     private int rootCounter;
     private long classCounter;
     private long exactMatchesCounter;
-    private Map<String, Integer> additonalDependenciesCounters = new HashMap<>();
+    private final Map<String, Integer> additonalDependenciesCounters = new HashMap<>();
 
     @BeforeEach
     public void init() {
@@ -145,8 +144,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
 
     private void handleDiff(String name, ClassFile cf, Set<String> cfdeps, Set<String> jdeps) {
         Set<String> diff = SetHelper.subtract(cfdeps, jdeps);
-        log.info(() -> "Dessert found additional dependencies for " + name + ":\n" +
-                diff.stream().collect(Collectors.joining("\n")));
+        log.info(() -> "Dessert found additional dependencies for " + name + ":\n" + String.join("\n", diff));
         countDiffs(diff);
         if (name.contains("module-info[")) {
             return;
@@ -160,22 +158,20 @@ public class JdepsCompatibilityTest implements ClassVisitor {
 
     private void countDiffs(Set<String> diff) {
         for (String name : diff) {
-            additonalDependenciesCounters.merge(name, 1, (a, b) -> a + b);
+            additonalDependenciesCounters.merge(name, 1, Integer::sum);
         }
     }
 
     private Set<String> specialCases(String name) {
-        switch (name) {
-            case "org.assertj.core.api.AbstractObjectAssert[assertj-core-3.18.1.jar]":
-            case "org.assertj.core.api.InstanceOfAssertFactories[assertj-core-3.18.1.jar]":
-                return Set.of("org.assertj.core.api.Assert");
-            default:
-                return Collections.emptySet();
-        }
+        return switch (name) {
+            case "org.assertj.core.api.AbstractObjectAssert[assertj-core-3.18.1.jar]",
+                    "org.assertj.core.api.InstanceOfAssertFactories[assertj-core-3.18.1.jar]" -> Set.of("org.assertj.core.api.Assert");
+            default -> Collections.emptySet();
+        };
     }
 
     private Set<String> determineDependenciesNotDetectedByJDeps(ClassFile cf) {
-        Set<String> referencedClasses = new HashSet<String>();
+        Set<String> referencedClasses = new HashSet<>();
         referencedClasses.add(Object.class.getName()); // according to jdeps there are classes not depending on Object
         determineClassesReferencedByRuntimeAnnotations(referencedClasses, cf);
         determineClassesReferencedBySignatureAttribute(referencedClasses, cf);

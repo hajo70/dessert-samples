@@ -1,15 +1,10 @@
 package de.spricom.dessert.jdeps;
 
 import de.spricom.dessert.classfile.ClassFile;
-import de.spricom.dessert.classfile.FieldInfo;
-import de.spricom.dessert.classfile.MethodInfo;
-import de.spricom.dessert.classfile.attribute.AttributeInfo;
 import org.assertj.core.api.AbstractObjectAssert;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.BeanDefinitionDsl;
-import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2ClientConfigurer;
-import org.springframework.security.config.web.servlet.HeadersDsl;
 import org.springframework.security.config.web.servlet.OAuth2ClientDsl;
 
 import java.io.IOException;

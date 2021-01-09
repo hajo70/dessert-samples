@@ -7,10 +7,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Uses jdeps to determine all dependencies of all classes within some root (jar file or directory).
@@ -26,20 +27,20 @@ public class JdepsWrapper {
     private String classPath = System.getProperty("java.class.path");
     private String classPathOption = "-cp";
     private String jdepsCommand = System.getProperty("jdeps.command","jdeps");
-    private List<String> options = new ArrayList<String>(Arrays.asList("-verbose:class", "-filter:none"));
+    private List<String> options = new ArrayList<>(Arrays.asList("-verbose:class", "-filter:none"));
 
     public JdepsWrapper() {
     }
 
     public String getJdepsVersion() throws IOException, InterruptedException {
-        List<String> command = new ArrayList<String>();
+        List<String> command = new ArrayList<>();
         command.add(jdepsCommand);
         command.add("-version");
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
         StringBuilder dump = new StringBuilder();
         if (log.isDebugEnabled()) {
-            dump.append(pb.command().stream().collect(Collectors.joining(" "))).append("\n");
+            dump.append(String.join(" ", pb.command())).append("\n");
         }
         Process p = pb.start();
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -54,7 +55,7 @@ public class JdepsWrapper {
         int exitCode = p.waitFor();
         log.debug(dump);
         if (exitCode != 0) {
-            throw new IllegalStateException(pb.command().stream().collect(Collectors.joining(" ")) + " failed!");
+            throw new IllegalStateException(String.join(" ", pb.command()) + " failed!");
         }
         return version;
     }
@@ -64,7 +65,7 @@ public class JdepsWrapper {
         pb.redirectErrorStream(true);
         StringBuilder dump = new StringBuilder();
         if (log.isDebugEnabled()) {
-            dump.append(pb.command().stream().collect(Collectors.joining(" "))).append("\n");
+            dump.append(String.join(" ", pb.command())).append("\n");
         }
         JdepsResult result = new JdepsResult();
         Process p = pb.start();
@@ -88,13 +89,13 @@ public class JdepsWrapper {
         int exitCode = p.waitFor();
         log.debug(dump);
         if (exitCode != 0) {
-            throw new IllegalStateException(pb.command().stream().collect(Collectors.joining(" ")) + " failed!");
+            throw new IllegalStateException(String.join(" ", pb.command()) + " failed!");
         }
         return result;
     }
 
     private List<String> getCommand(File path) {
-        List<String> command = new ArrayList<String>();
+        List<String> command = new ArrayList<>();
         command.add(jdepsCommand);
         command.addAll(options);
         command.add(classPathOption);

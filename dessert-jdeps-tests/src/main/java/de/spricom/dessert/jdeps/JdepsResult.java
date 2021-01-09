@@ -3,7 +3,7 @@ package de.spricom.dessert.jdeps;
 import java.util.*;
 
 public class JdepsResult {
-    private final Map<String, Set<String>> dependencyMap = new HashMap<String, Set<String>>();
+    private final Map<String, Set<String>> dependencyMap = new HashMap<>();
 
     public Set<String> getClasses() {
         return dependencyMap.keySet();
@@ -14,11 +14,7 @@ public class JdepsResult {
     }
 
     void addDependency(String currentClass, String dependentClass) {
-        Set<String> dependencies = dependencyMap.get(currentClass);
-        if (dependencies == null) {
-            dependencies = new TreeSet<String>();
-            dependencyMap.put(currentClass, dependencies);
-        }
+        Set<String> dependencies = dependencyMap.computeIfAbsent(currentClass, k -> new TreeSet<>());
         dependencies.add(dependentClass);
     }
 }
