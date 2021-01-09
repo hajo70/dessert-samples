@@ -145,10 +145,11 @@ public class JdepsCompatibilityTest implements ClassVisitor {
     private void handleDiff(String name, ClassFile cf, Set<String> cfdeps, Set<String> jdeps) {
         Set<String> diff = SetHelper.subtract(cfdeps, jdeps);
         log.info(() -> "Dessert found additional dependencies for " + name + ":\n" + String.join("\n", diff));
-        countDiffs(diff);
         if (name.contains("module-info[")) {
+            // jdeps ignores dependencies of module-info classes
             return;
         }
+        countDiffs(diff);
         if (false) {
             Set<String> expectedDiff = determineDependenciesNotDetectedByJDeps(cf);
             expectedDiff.addAll(specialCases(name));

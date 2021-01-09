@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 
 /**
  * Uses jdeps to determine all dependencies of all classes within some root (jar file or directory).
- *
  */
 public class JdepsWrapper {
     private static final Logger log = LogManager.getLogger(JdepsWrapper.class);
@@ -26,7 +25,7 @@ public class JdepsWrapper {
 
     private String classPath = System.getProperty("java.class.path");
     private String classPathOption = "-cp";
-    private String jdepsCommand = System.getProperty("jdeps.command","jdeps");
+    private String jdepsCommand = System.getProperty("jdeps.command", "jdeps");
     private List<String> options = new ArrayList<>(Arrays.asList("-verbose:class", "-filter:none"));
 
     public JdepsWrapper() {
@@ -64,18 +63,14 @@ public class JdepsWrapper {
         ProcessBuilder pb = new ProcessBuilder(getCommand(path));
         pb.redirectErrorStream(true);
         StringBuilder dump = new StringBuilder();
-        if (log.isDebugEnabled()) {
-            dump.append(String.join(" ", pb.command())).append("\n");
-        }
+        dump.append(String.join(" ", pb.command())).append("\n");
         JdepsResult result = new JdepsResult();
         Process p = pb.start();
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         String currentClass = "none";
         while ((line = in.readLine()) != null) {
-            if (log.isDebugEnabled()) {
-                dump.append(line).append("\n");
-            }
+            dump.append(line).append("\n");
             Matcher src = SRC_REGEX.matcher(line);
             if (src.matches()) {
                 currentClass = src.group(1);
@@ -89,7 +84,7 @@ public class JdepsWrapper {
         int exitCode = p.waitFor();
         log.debug(dump);
         if (exitCode != 0) {
-            throw new IllegalStateException(String.join(" ", pb.command()) + " failed!");
+            throw new IllegalStateException("jdeps failed:\n" + dump);
         }
         return result;
     }
