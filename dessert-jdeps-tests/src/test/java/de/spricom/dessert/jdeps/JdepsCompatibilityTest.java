@@ -9,15 +9,15 @@ import de.spricom.dessert.traversal.PathProcessor;
 import de.spricom.dessert.util.SetHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,11 +28,33 @@ public class JdepsCompatibilityTest implements ClassVisitor {
     private final JdepsWrapper wrapper = new JdepsWrapper();
     private JdepsResult jdepsResult;
 
+    private int rootCounter;
+    private long classCounter;
+    private long exactMatchesCounter;
+    private Map<String, Integer> additonalDependenciesCounters = new HashMap<>();
+
     @BeforeEach
     public void init() {
         wrapper.addOptions("--multi-release", "base");
-        wrapper.addOptions("--ignore-missing-deps");
         wrapper.setClassPathOption("--module-path");
+    }
+
+    @AfterEach
+    public void showStatistics() {
+        log.info(() -> "Additional dependencies found:\n" + dumpAddionalOccurrencies());
+
+        log.info("Results:\n{}\n{}\n{}",
+                String.format("%36s: %8d", "number of jar files or directories", rootCounter),
+                String.format("%36s: %8d", "total number of classes", classCounter),
+                String.format("%36s: %8d (difference: %d)", "number of exact matches",
+                        exactMatchesCounter, classCounter - exactMatchesCounter));
+    }
+
+    private String dumpAddionalOccurrencies() {
+        return additonalDependenciesCounters.entrySet().stream()
+                .sorted(Comparator.comparingLong(e -> e.getValue().longValue()))
+                .map(e -> String.format("%6d times: %s", e.getValue(), e.getKey()))
+                .collect(Collectors.joining("\n"));
     }
 
     @Test
@@ -56,7 +78,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
         PathProcessor proc = new PathProcessor() {
             @Override
             protected void processJar(File file, ClassVisitor visitor) throws IOException {
-                if (!filter(file)) {
+                if (!filterJar(file)) {
                     log.warn(() -> "Skipping " + file.getAbsolutePath());
                     return;
                 }
@@ -71,7 +93,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
         check(proc);
     }
 
-    private boolean filter(File jarFile) {
+    private boolean filterJar(File jarFile) {
         return skipNone(jarFile);
     }
 
@@ -80,22 +102,11 @@ public class JdepsCompatibilityTest implements ClassVisitor {
     }
 
     private boolean filterSingleJar(File jarFile) {
-        return "log4j-api-2.14.0.jar".equals(jarFile.getName());
-    }
-
-    private boolean skipProblemsWithModules(File jarFile) {
-        return !Set.of(
-                "junit-platform-launcher-1.7.0.jar",
-                "log4j-api-2.14.0.jar",
-                "log4j-core-2.14.0.jar",
-                "junit-jupiter-api-5.7.0.jar",
-                "junit-platform-commons-1.7.0.jar",
-                "junit-jupiter-engine-5.7.0.jar",
-                "junit-platform-engine-1.7.0.jar"
-        ).contains(jarFile.getName());
+        return "spring-security-config-5.4.2.jar".equals(jarFile.getName());
     }
 
     private void analyze(File root) {
+        rootCounter++;
         log.info("Analyzing {}", root);
         try {
             jdepsResult = wrapper.analyze(root);
@@ -112,6 +123,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
 
     @Override
     public void visit(File root, String classname, InputStream content) {
+        classCounter++;
         try {
             log.debug("Checking {}[{}]", classname, root.getName());
             ClassFile cf = new ClassFile(content);
@@ -123,6 +135,8 @@ public class JdepsCompatibilityTest implements ClassVisitor {
 
             if (cfdeps.size() != jdeps.size()) {
                 handleDiff(name, cf, cfdeps, jdeps);
+            } else {
+                exactMatchesCounter++;
             }
         } catch (IOException ex) {
             throw new RuntimeException("Processing " + classname + " in " + root.getAbsolutePath() + " failed.", ex);
@@ -133,6 +147,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
         Set<String> diff = SetHelper.subtract(cfdeps, jdeps);
         log.info(() -> "Dessert found additional dependencies for " + name + ":\n" +
                 diff.stream().collect(Collectors.joining("\n")));
+        countDiffs(diff);
         if (name.contains("module-info[")) {
             return;
         }
@@ -140,6 +155,12 @@ public class JdepsCompatibilityTest implements ClassVisitor {
             Set<String> expectedDiff = determineDependenciesNotDetectedByJDeps(cf);
             expectedDiff.addAll(specialCases(name));
             assertThat(expectedDiff).containsAll(diff);
+        }
+    }
+
+    private void countDiffs(Set<String> diff) {
+        for (String name : diff) {
+            additonalDependenciesCounters.merge(name, 1, (a, b) -> a + b);
         }
     }
 

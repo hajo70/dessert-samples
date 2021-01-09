@@ -2,11 +2,16 @@ package de.spricom.dessert.jdeps;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled
 public class LoggerTest {
     private static final Logger log = LogManager.getLogger(LoggerTest.class);
 
+    /**
+     * Use this to check the logger configuration.
+     */
     @Test
     void testLevel() {
         log.trace("test");
