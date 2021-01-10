@@ -32,7 +32,7 @@ public class DessertPerformanceTest implements ClassVisitor {
     }
 
     @Test
-    void testProjectClasses() throws IOException {
+    void testProjectClasses() {
         PathProcessor proc = new PathProcessor() {
             @Override
             protected void processJar(File file, ClassVisitor visitor) {
@@ -48,7 +48,7 @@ public class DessertPerformanceTest implements ClassVisitor {
     }
 
     @Test
-    public void testJarsOnClassPath() throws IOException {
+    public void testJarsOnClassPath() {
         PathProcessor proc = new PathProcessor() {
             @Override
             protected void processJar(File file, ClassVisitor visitor) throws IOException {
@@ -63,7 +63,7 @@ public class DessertPerformanceTest implements ClassVisitor {
         check(proc);
     }
 
-    private void check(PathProcessor proc) throws IOException {
+    private void check(PathProcessor proc) {
         proc.traverseAllClasses(this);
     }
 
