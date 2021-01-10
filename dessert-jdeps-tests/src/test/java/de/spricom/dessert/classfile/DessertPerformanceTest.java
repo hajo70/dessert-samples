@@ -40,6 +40,7 @@ public class DessertPerformanceTest implements ClassVisitor {
 
             @Override
             protected void processDirectory(File file, ClassVisitor visitor) throws IOException {
+                rootCounter++;
                 super.processDirectory(file, visitor);
             }
         };
@@ -51,6 +52,7 @@ public class DessertPerformanceTest implements ClassVisitor {
         PathProcessor proc = new PathProcessor() {
             @Override
             protected void processJar(File file, ClassVisitor visitor) throws IOException {
+                rootCounter++;
                 super.processJar(file, visitor);
             }
 
