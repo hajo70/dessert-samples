@@ -1,6 +1,6 @@
 package de.spricom.dessert.jdeps;
 
-import de.spricom.dessert.util.LookupUtil;
+import de.spricom.dessert.util.ClassUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +38,6 @@ public class JdepsWrapperTest {
     }
 
     private File getClassesDirectory() {
-        return LookupUtil.getRootFile(JdepsWrapper.class);
+        return ClassUtil.getRootFile(JdepsWrapper.class);
     }
 }

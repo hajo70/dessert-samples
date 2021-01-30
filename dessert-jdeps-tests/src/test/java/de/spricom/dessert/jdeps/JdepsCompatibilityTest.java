@@ -6,7 +6,7 @@ import de.spricom.dessert.classfile.MethodInfo;
 import de.spricom.dessert.classfile.attribute.*;
 import de.spricom.dessert.traversal.ClassVisitor;
 import de.spricom.dessert.traversal.PathProcessor;
-import de.spricom.dessert.util.SetHelper;
+import de.spricom.dessert.util.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
@@ -143,7 +143,7 @@ public class JdepsCompatibilityTest implements ClassVisitor {
     }
 
     private void handleDiff(String name, ClassFile cf, Set<String> cfdeps, Set<String> jdeps) {
-        Set<String> diff = SetHelper.subtract(cfdeps, jdeps);
+        Set<String> diff = Sets.difference(cfdeps, jdeps);
         log.info(() -> "Dessert found additional dependencies for " + name + ":\n" + String.join("\n", diff));
         if (name.contains("module-info[")) {
             // jdeps ignores dependencies of module-info classes
