@@ -11,7 +11,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>dessert-jdeps-wrapper</artifactId>
+    <artifactId>dessert-tests-jdeps</artifactId>
 
     <properties>
         <vaadin.version>14.4.5</vaadin.version>
@@ -40,7 +40,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.hajo70</groupId>
+            <groupId>de.spricom.dessert</groupId>
             <artifactId>dessert-core</artifactId>
             <version>0.4.0-SNAPSHOT</version>
         </dependency>
