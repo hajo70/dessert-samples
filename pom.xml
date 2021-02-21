@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>dessert-jdeps-tests</module>
+        <module>dessert-tests-jdeps</module>
     </modules>
 
     <properties>

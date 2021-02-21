@@ -1,0 +1,16 @@
+= dessert-tests
+
+This is a collection of tests and samples for the _dessert library_ documentation.
+For details see the links below:
+
+[cols="h,2"]
+|===
+|Documentation:
+|https://dessert.spricom.de/index.html[dessert.spricom.de] for released versions +
+https://hajo70.github.io/dessert-site/index.html[GitHub Pages] for the most current snapshot version +
+https://dessert.spricom.de/apidocs/[API Doc.]
+|Source-Code (GibHub):
+|https://github.com/hajo70/dessert-core[dessert-core] library source code +
+https://github.com/hajo70/dessert-site[dessert-site] documentation source code +
+https://github.com/hajo70/dessert-tests[dessert-tests] tests and samples
+|===
