@@ -1,8 +1,8 @@
 package test.samples;
 
+import de.spricom.dessert.slicing.Classpath;
 import de.spricom.dessert.slicing.Slice;
-import de.spricom.dessert.slicing.SliceContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static de.spricom.dessert.assertions.SliceAssertions.assertThat;
 
@@ -14,14 +14,13 @@ public class DetectingUsageOfInternalClassesTest {
 
     @Test
     public void testDoesNotUseInternalClasses() {
-        SliceContext sc = new SliceContext();
+        Classpath sc = new Classpath();
         Slice dessert = sc.packageTreeOf("de.spricom.dessert");
 
-        assertThat(dessert).doesNotUse(
+        assertThat(dessert).usesNot(
                 sc.packageTreeOf("com.sun"),
                 sc.packageTreeOf("sun"));
 
-        if (false)
-            assertThat(dessert).usesOnly(sc.packageTreeOf("java"));
+        assertThat(dessert).usesOnly(sc.packageTreeOf("java"));
     }
 }

@@ -1,52 +1,48 @@
 package test.samples;
 
 import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.groups.PackageSlice;
-import de.spricom.dessert.groups.SliceGroup;
-import de.spricom.dessert.slicing.ConcreteSlice;
+import de.spricom.dessert.slicing.Classpath;
+import de.spricom.dessert.slicing.PackageSlice;
 import de.spricom.dessert.slicing.Slice;
-import de.spricom.dessert.slicing.SliceContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.fest.assertions.Assertions.assertThat;
+import java.util.SortedMap;
+
+import static de.spricom.dessert.assertions.SliceAssertions.dessert;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DessertGroupSampleTest {
 
     @Test
     public void testCycleFree() {
-        Slice slice = new SliceContext().packageTreeOf("de.spricom.dessert");
+        Slice slice = new Classpath().packageTreeOf("de.spricom.dessert");
 
-        SliceGroup<PackageSlice> sg = SliceGroup.splitByPackage(slice);
-        SliceAssertions.dessert(sg).isCycleFree();
-
-        // short form:
-        SliceAssertions.dessert(slice).splitByPackage().isCycleFree();
+        dessert(slice.partitionByPackage()).isCycleFree();
     }
 
     @Test
     public void testNestingRuleNoParentPackage() {
-        Slice slice = new SliceContext().packageTreeOf("de.spricom.dessert");
-        SliceGroup<PackageSlice> packages = SliceGroup.splitByPackage(slice);
+        Slice slice = new Classpath().packageTreeOf("de.spricom.dessert");
+        SortedMap<String, PackageSlice> packages = slice.partitionByPackage();
 
-        packages.forEach(pckg -> SliceAssertions.assertThat(pckg)
-                .doesNotUse(pckg.getParentPackage(packages)));
-
+        packages.forEach((name, pckg) -> dessert(pckg).usesNot(pckg.getParentPackage()));
     }
 
     @Test
     public void testNestingRuleNoAncestorPackage() {
-        Slice slice = new SliceContext().packageTreeOf("de.spricom.dessert");
-        SliceGroup<PackageSlice> packages = SliceGroup.splitByPackage(slice);
+        Slice slice = new Classpath().packageTreeOf("de.spricom.dessert");
+        SortedMap<String, PackageSlice> packages = slice.partitionByPackage();
 
-        packages.forEach(pckg -> SliceAssertions.assertThat(pckg)
-                .doesNotUse(slice.slice(entry -> pckg.getParentPackageName().startsWith(entry.getPackageName()))));
+        packages.forEach((name, pckg) -> SliceAssertions.assertThat(pckg)
+                .usesNot(slice.slice(clazz -> pckg.getParentPackageName().startsWith(clazz.getPackageName()))));
     }
 
     @Test
     public void testNoDuplicates() {
-        ConcreteSlice duplicates = new SliceContext().duplicates();
+        Classpath cp = new Classpath();
+        Slice duplicates = cp.duplicates().minus(cp.asClazz("module-info"));
         StringBuilder sb = new StringBuilder();
-        duplicates.getSliceEntries().forEach(entry -> sb.append(entry.getURI()).append("\n"));
-        assertThat(duplicates.getSliceEntries()).as(sb.toString()).isEmpty();
+        duplicates.getClazzes().forEach(entry -> sb.append(entry.getURI()).append("\n"));
+        assertThat(duplicates.getClazzes()).as(sb.toString()).isEmpty();
     }
 }

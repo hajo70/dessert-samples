@@ -1,53 +1,38 @@
 package test.samples;
 
-import de.spricom.dessert.assertions.SliceAssertions;
-import de.spricom.dessert.groups.PackageSlice;
-import de.spricom.dessert.groups.SliceGroup;
-import de.spricom.dessert.resolve.ClassResolver;
+import de.spricom.dessert.slicing.Classpath;
+import de.spricom.dessert.slicing.PackageSlice;
 import de.spricom.dessert.slicing.Slice;
-import de.spricom.dessert.slicing.SliceContext;
-import org.fest.assertions.Fail;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.Fail;
+import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.SortedMap;
+
+import static de.spricom.dessert.assertions.SliceAssertions.dessert;
 
 public class SpringTest {
-    private static ClassResolver resolver;
 
-    private SliceContext sc;
-    private Slice packages;
-
-    @Before
-    public void init() throws IOException {
-        sc = new SliceContext(getSpringJarsResolver());
-        packages = sc.packagesOf(resolver.getRootFiles());
-    }
+    private Classpath cp = new Classpath();
+    private Slice spring = cp.packageTreeOf("org.springframework..*");
 
     @Test
-    public void testPackageCycles() throws IOException {
-        packages = packages.without(sc.packageTreeOf("org.springframework.cglib.core"));
-        packages = packages.without(sc.packageTreeOf("org.springframework.objenesis"));
-        SliceAssertions.assertThat(packages).splitByPackage().isCycleFree();
-    }
-
-    @Test
-    public void testClassCycles() {
-        try {
-            SliceAssertions.assertThat(sc.packagesOf(resolver.getRootFiles())).splitByPackage().isCycleFree();
-            Fail.fail("No cycle found");
-        } catch (AssertionError ae) {
-            System.out.println(ae.toString());
-        }
+    public void testPackageCycles() {
+        SortedMap<String, PackageSlice> packages = spring
+                .minus(cp.packageOf("org.springframework.cglib.core"),
+                        cp.packageOf("org.springframework.objenesis"),
+                        cp.packageOf("org.springframework.test.web.servlet.request"))
+                .partitionByPackage();
+        Assertions.assertThat(packages).hasSizeGreaterThan(10);
+        dessert(packages).isCycleFree();
     }
 
     @Test
     public void testNestedPackageDependencies() {
         try {
-            SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(packages);
-            for (PackageSlice slice : group) {
-                SliceAssertions.assertThat(slice).doesNotUse(slice.getParentPackage(group));
+            SortedMap<String, PackageSlice> packages = spring.partitionByPackage();
+            for (PackageSlice slice : packages.values()) {
+                dessert(slice).usesNot(slice.getParentPackage());
             }
             Fail.fail("No dependency found");
         } catch (AssertionError ae) {
@@ -58,25 +43,13 @@ public class SpringTest {
     @Test
     public void testOuterPackageDependencies() {
         try {
-            SliceGroup<PackageSlice> group = SliceGroup.splitByPackage(packages);
-            for (PackageSlice slice : group) {
-                SliceAssertions.assertThat(slice.getParentPackage(group)).doesNotUse(slice);
+            SortedMap<String, PackageSlice> packages = spring.partitionByPackage();
+            for (PackageSlice slice : packages.values()) {
+                dessert(slice.getParentPackage()).usesNot(slice);
             }
             Fail.fail("No dependency found");
         } catch (AssertionError ae) {
             System.out.println(ae.getMessage());
         }
-    }
-
-    private static ClassResolver getSpringJarsResolver() throws IOException {
-        if (resolver == null) {
-            resolver = new ClassResolver();
-            for (String filename : System.getProperty("java.class.path").split(File.pathSeparator)) {
-                if (filename.contains("spring")) {
-                    resolver.add(filename);
-                }
-            }
-        }
-        return resolver;
     }
 }

@@ -1,6 +1,10 @@
-package test.resove;
+package de.spricom.dessert.classfile;
 
-import org.junit.Test;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,9 +13,8 @@ import java.util.Enumeration;
 import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.logging.Logger;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * This class has been written to get an idea how long it needs to scan and read the entries of
@@ -20,11 +23,21 @@ import static org.fest.assertions.Assertions.assertThat;
  * used to de-compress the class files.
  */
 public class JarScanningPerformanceTest {
-    private static final Logger logger = Logger.getLogger(JarScanningPerformanceTest.class.getName());
+    private static final Logger log = LogManager.getLogger(JarScanningPerformanceTest.class);
 
-    private int classesCount;
-    private int jarsCount;
-    private long total;
+    long ts = System.nanoTime();
+    private int rootCounter;
+    private int classCounter;
+
+    @AfterEach
+    public void showStatistics(TestInfo info) {
+        long durationNanos = System.nanoTime() - ts;
+        double classesPerSecond = 1e9 * classCounter / durationNanos;
+        log.info("Results of {}:\n{}\n{}\n{}", info.getDisplayName(),
+                String.format("%36s: %8d", "number of jar files or directories", rootCounter),
+                String.format("%36s: %8d", "total number of classes", classCounter),
+                String.format("%36s: %8.0f", "classes per second", classesPerSecond));
+    }
 
     @Test
     public void testScanEntries() throws IOException {
@@ -41,11 +54,9 @@ public class JarScanningPerformanceTest {
         for (String file : System.getProperty("java.class.path").split(File.pathSeparator)) {
             if (file.toLowerCase().endsWith(".jar")) {
                 scan.accept(new File(file));
-                jarsCount++;
+                rootCounter++;
             }
         }
-        total = System.currentTimeMillis() - start;
-        logger.info(this::report);
     }
 
     private void scanEntriesOfJarFile(File file) {
@@ -54,7 +65,7 @@ public class JarScanningPerformanceTest {
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    classesCount++;
+                    classCounter++;
                 }
             }
         } catch (IOException ex) {
@@ -72,18 +83,11 @@ public class JarScanningPerformanceTest {
                         byte[] content = is.readAllBytes();
                         assertThat(content).isNotEmpty();
                     }
-                    classesCount++;
+                    classCounter++;
                 }
             }
         } catch (IOException ex) {
             throw new RuntimeException("Error processing " + file, ex);
         }
     }
-
-    private String report() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Needed " + total + " ms to scan " + classesCount + " classes in " + jarsCount + " JAR files.\n");
-        return sb.toString();
-    }
-
 }
