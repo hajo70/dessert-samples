@@ -1,4 +1,4 @@
-package test.samples;
+package de.spricom.dessert.samples;
 
 import de.spricom.dessert.slicing.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,16 +32,37 @@ public class HibernateTest {
     }
 
     @Test
-    public void testCycleFree() throws IOException {
+    public void findPackagesCycle() throws IOException {
         SortedMap<String, PackageSlice> packages = hibernate.partitionByPackage();
         assertThat(packages).hasSizeGreaterThan(10);
-        dessert(packages).isCycleFree();
+        try {
+            dessert(packages).isCycleFree();
+            throw new IllegalStateException("No cycle found"); // Cannot use AssertionError here.
+        } catch (AssertionError er) {
+            System.out.println(er.getMessage());
+        }
     }
 
     @Test
-    public void testClasses() {
+    public void showCauseOfPackageCylce() throws IOException {
+        try {
+            dessert(hibernate.slice("org.hibernate.query.criteria.internal.expression.function.*"))
+                    .usesNot(hibernate.slice("org.hibernate.query.criteria.internal.compile.*"));
+            throw new IllegalStateException("No dependency found"); // Cannot use AssertionError here.
+        } catch (AssertionError er) {
+            System.out.println(er.getMessage());
+        }
+    }
+
+    @Test
+    public void findClassesCycle() {
         Set<Clazz> clazzes = hibernate.getClazzes();
         assertThat(clazzes).hasSizeGreaterThan(1000);
-        dessert(clazzes).isCycleFree();
+        try {
+            dessert(clazzes).isCycleFree();
+            throw new IllegalStateException("No cycle found"); // Cannot use AssertionError here.
+        } catch (AssertionError er) {
+            System.out.println(er.getMessage());
+        }
     }
 }
