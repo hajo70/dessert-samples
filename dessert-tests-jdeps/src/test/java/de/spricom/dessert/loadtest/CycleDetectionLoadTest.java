@@ -4,7 +4,8 @@ import de.spricom.dessert.slicing.Classpath;
 import de.spricom.dessert.slicing.Clazz;
 import de.spricom.dessert.slicing.PackageSlice;
 import de.spricom.dessert.slicing.Slice;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.Set;
@@ -20,6 +21,7 @@ public class CycleDetectionLoadTest {
         detectCycles(packages.values(), "packages");
     }
 
+    @Disabled
     @Test
     public void dumpCycleCause() {
         Classpath cp = new Classpath();

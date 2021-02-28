@@ -45,8 +45,9 @@ public class JdepsCompatibilityTest implements ClassVisitor {
         log.info("Results:\n{}\n{}\n{}",
                 String.format("%36s: %8d", "number of jar files or directories", rootCounter),
                 String.format("%36s: %8d", "total number of classes", classCounter),
-                String.format("%36s: %8d (difference: %d)", "number of exact matches",
-                        exactMatchesCounter, classCounter - exactMatchesCounter));
+                String.format("%36s: %8d (%1.1f %%)", "number of exact matches",
+                        exactMatchesCounter,
+                        100.0 * exactMatchesCounter / classCounter));
     }
 
     private String dumpAddionalOccurrencies() {
