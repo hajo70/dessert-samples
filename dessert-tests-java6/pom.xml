@@ -37,6 +37,14 @@
             <version>1.4</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- special dependencies that caused some problems -->
+        <dependency>
+            <groupId>org.apache.xmlbeans</groupId>
+            <artifactId>xmlbeans</artifactId>
+            <version>2.6.0</version>
+            <!-- contains many classes twice -->
+        </dependency>
     </dependencies>
 
     <build>
