@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -123,7 +124,68 @@ public class CyclesTest {
         dessert(mergedPackages).isCycleFree();
     }
 
+    @Test
+    void investigateJUnit5PackageCycles() {
+        SortedMap<String, PackageSlice> packages = cp.slice("org.junit..*").partitionByPackage();
+        Map<String, Slice> mergedPackages = new HashMap<>(packages);
+
+        List<List<Slice>> cycles = List.of(
+                Stream.of("runner", "runner.notification", "runner.manipulation", "runners.model",
+                        "validator", "experimental",
+                        "internal", "internal.requests", "internal.runners", "internal.builders")
+                        .map("org.junit."::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList()),
+                Stream.of("", ".util", ".function", ".logging")
+                        .map("org.junit.platform.commons"::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList()),
+                Stream.of("", ".core")
+                        .map("org.junit.jupiter.params.shadow.com.univocity.parsers.common.processor"::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList()),
+                Stream.of("fixed", "common", "common.input", "common.iterators", "common.routine",
+                        "common.fields", "common.record")
+                        .map("org.junit.jupiter.params.shadow.com.univocity.parsers."::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList()),
+                Stream.of("conversions", "annotations", "annotations.helpers")
+                        .map("org.junit.jupiter.params.shadow.com.univocity.parsers."::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList()),
+                Stream.of("", ".rules", ".internal.runners.rules", ".runners", ".runners.parameterized")
+                        .map("org.junit"::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList()),
+                Stream.of("", ".internal")
+                        .map("org.junit.experimental.theories"::concat)
+                        .map(mergedPackages::remove).collect(Collectors.toList())
+        );
+
+        int i = 1;
+        // cycle1 ist to big to show all permutations
+        for (List<Slice> cycle : cycles.subList(1, cycles.size())) {
+            i++;
+            System.out.printf("%n----- CYCLE %d ------------------------------------------------%n", i);
+            investigateCycle(cycle);
+            mergedPackages.put("cycle" + i, Slices.of(cycle).named("cycle" + i));
+        }
+
+        cycles = List.of(
+                Stream.of("cycle2", "cycle3", "cycle4", "cycle5",
+                        "org.junit.jupiter.params.shadow.com.univocity.parsers.common.input.concurrent")
+                        .map(mergedPackages::remove).collect(Collectors.toList()));
+
+        i = 0;
+        for (List<Slice> cycle : cycles) {
+            i++;
+            System.out.printf("%n----- BIG CYCLE %d --------------------------------------------%n", i);
+            investigateCycle(cycle, Clazz::getName);
+            mergedPackages.put("big-cycle" + i, Slices.of(cycle).named("big-cycle" + i));
+        }
+
+        dessert(mergedPackages).isCycleFree();
+    }
+
     private void investigateCycle(List<Slice> slices) {
+        investigateCycle(slices, c -> c.getName().substring(c.getPackageName().length() + 1));
+    }
+
+    private void investigateCycle(List<Slice> slices, Function<Clazz, String> name) {
         for (var p : permute(slices)) {
             Slice l = p.getLeft();
             Slice r = p.getRight();
@@ -131,8 +193,8 @@ public class CyclesTest {
                 System.out.printf("\n%s -> %s:%n", p.getLeft(), p.getRight());
                 for (Clazz clazz : l.slice(c -> c.uses(r)).getClazzes()) {
                     String usages = clazz.getDependencies().slice(r).getClazzes().stream()
-                            .map(Clazz::getSimpleName).collect(Collectors.joining(", "));
-                    System.out.printf("  %s uses %s%n", clazz.getSimpleName(), usages);
+                            .map(name).collect(Collectors.joining(", "));
+                    System.out.printf("  %s uses %s%n", name.apply(clazz), usages);
                 }
             }
         }

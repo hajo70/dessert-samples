@@ -21,7 +21,7 @@ public class InvestigationTests {
     void showReflectionUsageForSpringFrameworkWithDetails() {
         Slice spring = cp.slice("org.springframework..*");
         Slice reflection = cp.slice("java.lang.reflect..*");
-        spring.slice(c -> c.uses(reflection)).getClazzes().forEach(c ->
+        spring.slice(c -> c.uses(reflection)).getClazzes().stream().sorted().forEach(c ->
                 System.out.printf("%s[%s]%n", c.getName(),
                         c.getDependencies().slice(reflection).getClazzes().stream()
                                 .map(Clazz::getSimpleName)
