@@ -24,12 +24,12 @@ public class CyclesTest {
         modules.put("reactor.cycle1", Slices.of(
                 packages.remove("reactor.core.publisher"),
                 packages.remove("reactor.adapter"),
-                packages.remove("reactor.util.concurrent")
+                packages.remove("reactor.util.concurrent"),
+                packages.remove("reactor.util.retry")
         ).named("reactor.core cycle 1"));
         modules.putAll(packages);
 
         dessert(modules).isCycleFree();
-        dessert(root.partitionByPackage()).isCycleFree();
     }
 
     @Test
@@ -39,9 +39,10 @@ public class CyclesTest {
 
         PackageSlice publisher = packages.get("reactor.core.publisher");
         PackageSlice adapter = packages.get("reactor.adapter");
-        PackageSlice util = packages.get("reactor.util.concurrent");
+        PackageSlice utilCuncurrent = packages.get("reactor.util.concurrent");
+        PackageSlice utilRetry = packages.get("reactor.util.retry");
 
-        investigateCycle(List.of(publisher, adapter, util));
+        investigateCycle(List.of(publisher, adapter, utilCuncurrent, utilRetry));
     }
 
     @Test
