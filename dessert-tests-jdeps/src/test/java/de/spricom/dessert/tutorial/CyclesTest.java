@@ -1,8 +1,11 @@
 package de.spricom.dessert.tutorial;
 
+import de.spricom.dessert.classfile.attribute.AttributeInfo;
 import de.spricom.dessert.slicing.*;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.springframework.batch.item.ItemReader;
 import reactor.core.publisher.Flux;
 
 import java.util.*;
@@ -12,6 +15,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static de.spricom.dessert.assertions.SliceAssertions.dessert;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CyclesTest {
     private static final Classpath cp = new Classpath();
@@ -40,10 +44,10 @@ public class CyclesTest {
 
         PackageSlice publisher = packages.get("reactor.core.publisher");
         PackageSlice adapter = packages.get("reactor.adapter");
-        PackageSlice utilCuncurrent = packages.get("reactor.util.concurrent");
+        PackageSlice utilConcurrent = packages.get("reactor.util.concurrent");
         PackageSlice utilRetry = packages.get("reactor.util.retry");
 
-        investigateCycle(List.of(publisher, adapter, utilCuncurrent, utilRetry));
+        investigateCycle(List.of(publisher, adapter, utilConcurrent, utilRetry));
     }
 
     @Test
@@ -125,57 +129,26 @@ public class CyclesTest {
     }
 
     @Test
-    void investigateJUnit5PackageCycles() {
-        SortedMap<String, PackageSlice> packages = cp.slice("org.junit..*").partitionByPackage();
+    void investigateSpringBatchInfrastructureCycles() {
+        SortedMap<String, PackageSlice> packages = cp.rootOf(ItemReader.class)
+                .minus(this::isDeprecated)
+                .partitionByPackage();
         Map<String, Slice> mergedPackages = new HashMap<>(packages);
 
-        List<List<Slice>> cycles = List.of(
-                Stream.of("runner", "runner.notification", "runner.manipulation", "runners.model",
-                        "validator", "experimental",
-                        "internal", "internal.requests", "internal.runners", "internal.builders")
-                        .map("org.junit."::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList()),
-                Stream.of("", ".util", ".function", ".logging")
-                        .map("org.junit.platform.commons"::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList()),
-                Stream.of("", ".core")
-                        .map("org.junit.jupiter.params.shadow.com.univocity.parsers.common.processor"::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList()),
-                Stream.of("fixed", "common", "common.input", "common.iterators", "common.routine",
-                        "common.fields", "common.record")
-                        .map("org.junit.jupiter.params.shadow.com.univocity.parsers."::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList()),
-                Stream.of("conversions", "annotations", "annotations.helpers")
-                        .map("org.junit.jupiter.params.shadow.com.univocity.parsers."::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList()),
-                Stream.of("", ".rules", ".internal.runners.rules", ".runners", ".runners.parameterized")
-                        .map("org.junit"::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList()),
-                Stream.of("", ".internal")
-                        .map("org.junit.experimental.theories"::concat)
-                        .map(mergedPackages::remove).collect(Collectors.toList())
+        List<Stream<String>> cycles = List.of(
+                Stream.of("item", "item.util"),
+                Stream.of("item.file", "item.support")
         );
 
-        int i = 1;
-        // cycle1 ist to big to show all permutations
-        for (List<Slice> cycle : cycles.subList(1, cycles.size())) {
+        int i = 0;
+        for (Stream<String> involvedPackages : cycles) {
+            List<Slice> cycle = involvedPackages
+                    .map("org.springframework.batch."::concat)
+                    .map(mergedPackages::remove).collect(Collectors.toList());
             i++;
             System.out.printf("%n----- CYCLE %d ------------------------------------------------%n", i);
             investigateCycle(cycle);
             mergedPackages.put("cycle" + i, Slices.of(cycle).named("cycle" + i));
-        }
-
-        cycles = List.of(
-                Stream.of("cycle2", "cycle3", "cycle4", "cycle5",
-                        "org.junit.jupiter.params.shadow.com.univocity.parsers.common.input.concurrent")
-                        .map(mergedPackages::remove).collect(Collectors.toList()));
-
-        i = 0;
-        for (List<Slice> cycle : cycles) {
-            i++;
-            System.out.printf("%n----- BIG CYCLE %d --------------------------------------------%n", i);
-            investigateCycle(cycle, Clazz::getName);
-            mergedPackages.put("big-cycle" + i, Slices.of(cycle).named("big-cycle" + i));
         }
 
         dessert(mergedPackages).isCycleFree();
@@ -201,8 +174,39 @@ public class CyclesTest {
     }
 
     @Test
+    void checkJUnit5IsCycleFree() {
+        Root junit4 = cp.rootOf(Before.class);
+        Slice junit5 = cp.slice("org.junit..*")
+                .minus(junit4) // ignore old junit4 classes
+                .minus("..shadow..*") // shadow packages don't belong to junit itself
+                .minus(this::isDeprecated); // ignore deprecated classes
+        dessert(junit5.partitionByPackage()).isCycleFree();
+    }
+
+    private boolean isDeprecated(Clazz clazz) {
+        // using the ClassFile is more efficient than reflection
+        for (AttributeInfo attribute : clazz.getClassFile().getAttributes()) {
+            if ("Deprecated".equals(attribute.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isDeprecatedUsingReflection(Clazz clazz) {
+        try {
+            return clazz.getClassImpl().getAnnotation(Deprecated.class) != null;
+        } catch (NoClassDefFoundError er) {
+            // ignore some Kotlin classes that can't be loaded through reflection
+            return false;
+        }
+    }
+
+    @Test
     void testPermute() {
-        permute(IntStream.rangeClosed(1, 4).boxed().collect(Collectors.toList())).forEach(System.out::println);
+        List<Pair<Integer, Integer>> permutations
+                = permute(IntStream.rangeClosed(1, 4).boxed().collect(Collectors.toList()));
+        assertThat(permutations).hasSize(24);
     }
 
     private <X> List<Pair<X, X>> permute(List<X> list) {
