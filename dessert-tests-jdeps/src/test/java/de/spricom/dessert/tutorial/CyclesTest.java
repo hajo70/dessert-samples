@@ -159,7 +159,7 @@ public class CyclesTest {
     }
 
     private void investigateCycle(List<Slice> slices, Function<Clazz, String> name) {
-        for (var p : permute(slices)) {
+        permute(slices).forEach(p -> {
             Slice l = p.getLeft();
             Slice r = p.getRight();
             if (l.uses(r)) {
@@ -170,7 +170,7 @@ public class CyclesTest {
                     System.out.printf("  %s uses %s%n", name.apply(clazz), usages);
                 }
             }
-        }
+        });
     }
 
     @Test
@@ -203,29 +203,34 @@ public class CyclesTest {
     }
 
     @Test
-    void testPermute() {
-        List<Pair<Integer, Integer>> permutations
-                = permute(IntStream.rangeClosed(1, 4).boxed().collect(Collectors.toList()));
-        assertThat(permutations).hasSize(24);
+    void testPairs() {
+        int n = 5;
+        List<Integer> ints = IntStream.rangeClosed(1, n).boxed().collect(Collectors.toList());
+        List<Pair<Integer, Integer>> perms = pairs(ints).collect(Collectors.toList());
+        for (var p : perms) {
+            System.out.printf("(%d,%d)%n", p.getLeft(), p.getRight());
+        }
+        int sz = 1 + 2 + 3 + 4;
+        assertThat(perms).hasSize(sz);
+        assertThat(perms.stream().map(p -> p.getLeft() + "/" + p.getRight()).collect(Collectors.toSet())).hasSize(sz);
     }
 
-    private <X> List<Pair<X, X>> permute(List<X> list) {
+    private <X> Stream<Pair<X, X>> permute(List<X> list) {
+        return pairs(list).flatMap(p -> Stream.of(p, Pair.of(p.getRight(), p.getLeft())));
+    }
+
+    private <X> Stream<Pair<X, X>> pairs(List<X> list) {
         int sz = list.size();
         if (sz < 2) {
             throw new IllegalArgumentException("sz = " + sz);
         }
         if (sz == 2) {
-            return List.of(Pair.of(list.get(0), list.get(1)), Pair.of(list.get(1), list.get(0)));
+            return Stream.of(Pair.of(list.get(0), list.get(1)));
         }
-        List<Pair<X, X>> result = new LinkedList<>();
-        for (int i = 0; i < sz; i++) {
-            result.addAll(permute(
-                    Stream.concat(
-                            list.subList(0, i).stream(),
-                            list.subList(i + 1, sz).stream())
-                            .collect(Collectors.toList())));
-        }
-        return result;
+        X first = list.get(0);
+        Stream<Pair<X, X>> pairs = IntStream.range(1, sz)
+                .mapToObj(list::get)
+                .map(r -> Pair.of(first, r));
+        return Stream.concat(pairs, pairs(list.subList(1, sz)));
     }
-
 }
