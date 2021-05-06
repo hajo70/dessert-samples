@@ -14,7 +14,7 @@
     <artifactId>dessert-tests-jdeps</artifactId>
 
     <properties>
-        <vaadin.version>14.5.1</vaadin.version>
+        <vaadin.version>14.5.3</vaadin.version>
     </properties>
 
     <dependencyManagement>
